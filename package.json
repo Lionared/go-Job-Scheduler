@@ -1,0 +1,29 @@
+{
+  "name": "go-job-scheduler",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {
+    "cz-conventional-changelog": "^3.3.0"
+  },
+  "scripts": {
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -w -r 0",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lionared/go-Job-Scheduler.git"
+  },
+  "author": "Lionared Yang",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Lionared/go-Job-Scheduler/issues"
+  },
+  "homepage": "https://github.com/Lionared/go-Job-Scheduler#readme",
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
+}
