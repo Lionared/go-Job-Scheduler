@@ -1,0 +1,21 @@
+POST http://localhost:20001/api/job/add
+Content-Type: application/json
+
+{
+  "name": "print1",
+  "funcName": "print",
+  "args": ["hello world"],
+  "startTime": "2022-06-04T23:05:00Z",
+  "interval": 30,
+  "type": 2
+}
+
+###
+GET http://localhost:20001/api/jobs
+Accept: application/json
+
+###
+GET http://localhost:20001/
+Accept: application/json
+
+###
