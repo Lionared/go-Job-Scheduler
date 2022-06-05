@@ -10,7 +10,7 @@ make linux
 make macos
 ```  
 * docker  
-* ```shell
+```shell
 make docker
 ```  
 
