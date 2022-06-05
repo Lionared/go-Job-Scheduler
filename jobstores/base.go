@@ -6,10 +6,6 @@ import (
 	"sync"
 )
 
-type driver interface {
-	connect()
-}
-
 type JobStore interface {
 	setOption(StoreOption)
 	AddJob(jobs.Job) error
