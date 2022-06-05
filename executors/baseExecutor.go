@@ -22,16 +22,19 @@ func (this *BaseExecutor) Add(job jobs.Job) {
 func (this *BaseExecutor) Execute() {
 	var wg sync.WaitGroup
 	var runningJobs int
-	// TODO: 优化并行执行逻辑，添加任务执行耗时、状态监测等
+	// TODO: 添加任务执行耗时、状态监测等
 	for _, v := range this.Pool {
 		if runningJobs < this.PoolSize {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
+				log.Println("Executing job", v.Id)
 				_, err := call(v.FuncName, v.Args...)
 				if err != nil {
-					log.Println(v.Name, err)
+					log.Println("Error:", v.Id, err)
+					// TODO: add failed job retries
 				}
+				log.Println("Executing job", v.Id, ". Done")
 			}()
 			runningJobs++
 		}

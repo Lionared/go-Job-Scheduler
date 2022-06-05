@@ -1,6 +1,8 @@
 package jobstores
 
 import (
+	"errors"
+	"fmt"
 	"github.com/go-redis/redis"
 	"go-Job-Scheduler/jobs"
 	"log"
@@ -62,9 +64,9 @@ func (store *RedisJobStore) connect() {
 	}()
 }
 
-func (store *RedisJobStore) AddJob(j jobs.Job) {
+func (store *RedisJobStore) AddJob(j jobs.Job) error {
 	if store.Client.HExists(store.storeKey, j.Id).Val() {
-		return
+		return errors.New(fmt.Sprint("job %s already exists", j.Id))
 	}
 	var job *jobs.Job
 	// 如果传入的job id为空， 则调用jobs.New生成job id
@@ -82,14 +84,18 @@ func (store *RedisJobStore) AddJob(j jobs.Job) {
 	// 准备pipeline，添加至redis中jobs hash表以及job激活时间的有序集合中
 	pipe := store.Client.Pipeline()
 	pipe.HSet(store.storeKey, job.Id, job.Bytes())
-	pipe.ZAdd(store.runtimesKey, redis.Z{Score: job.NextRunTime(), Member: job.Id})
-	res, err := pipe.Exec()
-	if err != nil {
-		log.Println("Error: RedisJobStore::AddJob,", res, err)
+	// 如果job下次执行时间非0，则将该job下次执行时间作为Score放入redis有序集合中
+	if job.NextRunTime() != 0 {
+		pipe.ZAdd(store.runtimesKey, redis.Z{Score: job.NextRunTime(), Member: job.Id})
 	}
+	_, err := pipe.Exec()
+	if err != nil {
+		return errors.New(fmt.Sprintf("Error: RedisJobStore::AddJob, %s", err.Error()))
+	}
+	return nil
 }
 
-func (store *RedisJobStore) RemoveJob(job jobs.Job) {
+func (store *RedisJobStore) RemoveJob(job jobs.Job) error {
 	// 加锁
 	store.Lock()
 	// 函数执行完毕前解锁
@@ -100,19 +106,21 @@ func (store *RedisJobStore) RemoveJob(job jobs.Job) {
 	pipe.ZRem(store.runtimesKey, job.Id)
 	_, err := pipe.Exec()
 	if err != nil {
-		log.Println("Error: RedisJobStore::RemoveJob,", err)
+		return errors.New(fmt.Sprintf("Error: RedisJobStore::RemoveJob, %s", err.Error()))
 	}
+	return nil
 }
 
-func (store *RedisJobStore) UpdateJob(job jobs.Job, anotherJob jobs.Job) {
+func (store *RedisJobStore) UpdateJob(job *jobs.Job, anotherJob jobs.Job) error {
 	// 加锁
 	store.Lock()
 	// 函数执行完毕前解锁
 	defer store.Unlock()
-	job.Update(anotherJob)
+	err := job.Update(anotherJob)
+	return err
 }
 
-func (store *RedisJobStore) GetJobById(id string) jobs.Job {
+func (store *RedisJobStore) GetJobById(id string) *jobs.Job {
 	val := store.Client.HGet(store.storeKey, id).Val()
 	return jobs.BytesToJob([]byte(val))
 }
@@ -139,9 +147,11 @@ func (store *RedisJobStore) GetJobs2Run() []jobs.Job {
 	pipe := store.Client.Pipeline()
 	for _, jobId := range results {
 		job := store.GetJobById(jobId)
-		jobs2Run = append(jobs2Run, job)
-		pipe.HDel(store.storeKey, job.Id)
-		pipe.ZRem(store.runtimesKey, job.Id)
+		if !strings.EqualFold(job.Id, "") {
+			jobs2Run = append(jobs2Run, *job)
+			pipe.HDel(store.storeKey, job.Id)
+			pipe.ZRem(store.runtimesKey, job.Id)
+		}
 	}
 	_, err := pipe.Exec()
 	if err != nil {
@@ -158,7 +168,9 @@ func (store *RedisJobStore) GetAllJobs() []jobs.Job {
 	}
 	for _, serializedStrJob := range results {
 		job := jobs.BytesToJob([]byte(serializedStrJob))
-		allJobs = append(allJobs, job)
+		if job != nil {
+			allJobs = append(allJobs, *job)
+		}
 	}
 	return allJobs
 }

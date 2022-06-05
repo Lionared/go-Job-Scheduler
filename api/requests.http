@@ -1,3 +1,22 @@
+### Update Job 目前仅支持修改名称及运行时间间隔
+POST http://localhost:20001/api/job/update
+Content-Type: application/json
+
+{
+  "id": "b3db5860-92f8-4a09-bd7d-9eeb46cb0c47",
+  "name": "test",
+  "interval": 10
+}
+
+### Delete Job
+POST http://localhost:20001/api/job/delete
+Content-Type: application/json
+
+{
+  "id": "b1578375-291d-4240-8b13-4bb0fc693c61"
+}
+
+### Add a Job
 POST http://localhost:20001/api/job/add
 Content-Type: application/json
 
@@ -10,11 +29,15 @@ Content-Type: application/json
   "type": 2
 }
 
-###
+### Get All Jobs
 GET http://localhost:20001/api/jobs
 Accept: application/json
 
-###
+### Get a Job
+GET http://localhost:20001/api/job/?id=b3db5860-92f8-4a09-bd7d-9eeb46cb0c47
+Accept: application/json
+
+### Get Index
 GET http://localhost:20001/
 Accept: application/json
 

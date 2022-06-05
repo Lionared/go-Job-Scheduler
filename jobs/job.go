@@ -17,7 +17,7 @@ const (
 )
 
 type Job struct {
-	Id           string
+	Id           string        `json:"id"`
 	Name         string        `json:"name"`
 	FuncName     string        `json:"funcName"`
 	Args         []interface{} `json:"args"`
@@ -27,7 +27,7 @@ type Job struct {
 	Type         uint8         `json:"type"`
 }
 
-// New
+// New returns a valid job
 // @param name : job name,
 // @param funcName: 要执行的函数名称
 // @param startTime: 任务开始时间, web传递格式为 2022-06-03T18:02:03Z
@@ -54,11 +54,14 @@ func (job *Job) NextRunTime() float64 {
 	return float64(t)
 }
 
-func (job *Job) Update(modified Job) {
+func (job *Job) Update(modified Job) error {
 	if modified.Name != "" {
 		job.Name = modified.Name
 	}
-	//TODO:  modify others
+	if modified.Interval != 0 {
+		job.Interval = modified.Interval
+	}
+	return nil
 }
 
 func (job *Job) String() string {
@@ -72,9 +75,9 @@ func (job *Job) Bytes() []byte {
 	return buf.Bytes()
 }
 
-func BytesToJob(b []byte) Job {
+func BytesToJob(b []byte) *Job {
 	// 使用 encoding/gob 反序列化
 	var job Job
 	_ = gob.NewDecoder(bytes.NewBuffer(b)).Decode(&job)
-	return job
+	return &job
 }

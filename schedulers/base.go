@@ -95,7 +95,7 @@ func (this *baseScheduler) Run() {
 						job.NextRunTime_ = time.Unix(0, 0)
 					}
 					// 将任务放回 store
-					this.JobStore.AddJob(job)
+					_ = this.JobStore.AddJob(job)
 				}
 				// 另起一个 goroutine 执行 executor
 				go this.Executor.Execute()

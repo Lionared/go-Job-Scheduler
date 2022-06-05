@@ -12,9 +12,10 @@ type driver interface {
 
 type JobStore interface {
 	setOption(StoreOption)
-	AddJob(jobs.Job)
-	RemoveJob(jobs.Job)
-	UpdateJob(jobs.Job, jobs.Job)
+	AddJob(jobs.Job) error
+	RemoveJob(jobs.Job) error
+	UpdateJob(*jobs.Job, jobs.Job) error
+	GetJobById(string) *jobs.Job
 	GetJobs2Run() []jobs.Job
 	GetAllJobs() []jobs.Job
 	sync.Locker

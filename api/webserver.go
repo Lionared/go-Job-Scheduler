@@ -98,10 +98,17 @@ func (server *WebServer) Start() {
 }
 
 // methodMiddleware 请求方式中间件
-func methodMiddleware(m string) Middleware {
+func methodMiddleware(methods ...string) Middleware {
 	return func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.Method != m {
+			var matched = false
+			for _, m := range methods {
+				if m == r.Method {
+					matched = true
+					break
+				}
+			}
+			if !matched {
 				http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 				return
 			}
@@ -144,4 +151,7 @@ func (mux *myServeMux) RegisterHandlers() {
 	mux.HandleFunc("/", handleIndex)
 	mux.Handle("/api/jobs", chain(http.HandlerFunc(handleJobsList), methodMiddleware("GET")))
 	mux.Handle("/api/job/add", chain(http.HandlerFunc(handleJobAdd), methodMiddleware("POST")))
+	mux.Handle("/api/job/delete", chain(http.HandlerFunc(handleJobDelete), methodMiddleware("POST")))
+	mux.Handle("/api/job/update", chain(http.HandlerFunc(handleJobUpdate), methodMiddleware("POST")))
+	mux.Handle("/api/job/", chain(http.HandlerFunc(handleJobRead), methodMiddleware("GET", "POST")))
 }
